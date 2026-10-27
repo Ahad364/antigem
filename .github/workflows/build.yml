@@ -1,0 +1,38 @@
+name: Build AntiGem
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleTermuxDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: antigem-termux-debug
+          path: app/build/outputs/apk/termux/debug/*.apk
